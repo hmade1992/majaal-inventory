@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة المستخدمين - نظام إدارة المخزون</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div id="loader" class="loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <h1>🏛️ شركة التميز</h1>
+      <p class="category">بورسلين - رخام - مواد صحية</p>
+      <p class="tagline">خلي التميز عادة</p>
+    </div>
+  </header>
+
+  <nav>
+    <div class="nav-links">
+      <a href="/dashboard.html">الرئيسية</a>
+      <a href="/inventory.html">الجرد اليومي</a>
+      <a href="/damages.html">التوالف</a>
+      <a href="/reports.html">التقارير</a>
+      <a href="/users.html" class="active">المستخدمون</a>
+    </div>
+    <div class="user-info">
+      <span id="userName">جاري التحميل...</span>
+      <button class="btn btn-danger" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>إدارة المستخدمين</h2>
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>البريد الإلكتروني</th>
+            <th>الدور</th>
+            <th>الحالة</th>
+            <th>تاريخ الإنشاء</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="/pages/users/users.js"></script>
+</body>
+</html>

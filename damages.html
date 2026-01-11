@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التوالف - نظام إدارة المخزون</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div id="loader" class="loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <h1>🏛️ شركة التميز</h1>
+      <p class="category">بورسلين - رخام - مواد صحية</p>
+      <p class="tagline">خلي التميز عادة</p>
+    </div>
+  </header>
+
+  <nav>
+    <div class="nav-links">
+      <a href="/dashboard.html">الرئيسية</a>
+      <a href="/inventory.html">الجرد اليومي</a>
+      <a href="/damages.html" class="active">التوالف</a>
+      <a href="/reports.html">التقارير</a>
+      <a href="/users.html" id="usersLink" style="display: none;">المستخدمون</a>
+    </div>
+    <div class="user-info">
+      <span id="userName">جاري التحميل...</span>
+      <button class="btn btn-danger" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>إضافة تلف</h2>
+      <form id="damageForm">
+        <div class="form-group">
+          <label for="itemId">الصنف</label>
+          <select id="itemId" required></select>
+        </div>
+        <div class="form-group">
+          <label for="currentQty">الكمية الحالية</label>
+          <input type="text" id="currentQty" readonly>
+        </div>
+        <div class="form-group">
+          <label for="damageQty">كمية التالف</label>
+          <input type="number" id="damageQty" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="reason">سبب التلف</label>
+          <textarea id="reason" rows="3" placeholder="اكسار، رطوبة، عيب تصنيع..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-danger">تسجيل التلف</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>سجل التوالف</h2>
+      <div class="form-group">
+        <label for="filterDate">تاريخ التلف</label>
+        <input type="date" id="filterDate">
+      </div>
+      <table id="damagesTable">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>الصنف</th>
+            <th>كمية التالف</th>
+            <th>السبب</th>
+            <th>المسجل</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="/pages/damages/damages.js"></script>
+</body>
+</html>

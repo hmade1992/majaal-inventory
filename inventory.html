@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الجرد اليومي - نظام إدارة المخزون</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div id="loader" class="loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <h1>🏛️ شركة التميز</h1>
+      <p class="category">بورسلين - رخام - مواد صحية</p>
+      <p class="tagline">خلي التميز عادة</p>
+    </div>
+  </header>
+
+  <nav>
+    <div class="nav-links">
+      <a href="/dashboard.html">الرئيسية</a>
+      <a href="/inventory.html" class="active">الجرد اليومي</a>
+      <a href="/damages.html">التوالف</a>
+      <a href="/reports.html">التقارير</a>
+      <a href="/users.html" id="usersLink" style="display: none;">المستخدمون</a>
+    </div>
+    <div class="user-info">
+      <span id="userName">جاري التحميل...</span>
+      <button class="btn btn-danger" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>إضافة جرد يومي</h2>
+      <form id="inventoryForm">
+        <div class="form-group">
+          <label for="itemId">الصنف</label>
+          <select id="itemId" required></select>
+        </div>
+        <div class="form-group">
+          <label for="currentQty">الكمية الحالية (قبل الجرد)</label>
+          <input type="text" id="currentQty" readonly>
+        </div>
+        <div class="form-group">
+          <label for="countedQty">جرد اليوم</label>
+          <input type="number" id="countedQty" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="notes">ملاحظات</label>
+          <textarea id="notes" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">حفظ الجرد</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>سجل الجرد اليومي</h2>
+      <div class="form-group">
+        <label for="filterDate">تاريخ الجرد</label>
+        <input type="date" id="filterDate">
+      </div>
+      <table id="inventoryTable">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>الصنف</th>
+            <th>الكمية السابقة</th>
+            <th>جرد اليوم</th>
+            <th>الفرق</th>
+            <th>المسجل</th>
+            <th>ملاحظات</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="/pages/inventory/inventory.js"></script>
+</body>
+</html>

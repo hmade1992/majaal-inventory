@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التقارير - نظام إدارة المخزون</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div id="loader" class="loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <h1>🏛️ شركة التميز</h1>
+      <p class="category">بورسلين - رخام - مواد صحية</p>
+      <p class="tagline">خلي التميز عادة</p>
+    </div>
+  </header>
+
+  <nav>
+    <div class="nav-links">
+      <a href="/dashboard.html">الرئيسية</a>
+      <a href="/inventory.html">الجرد اليومي</a>
+      <a href="/damages.html">التوالف</a>
+      <a href="/reports.html" class="active">التقارير</a>
+      <a href="/users.html" id="usersLink" style="display: none;">المستخدمون</a>
+    </div>
+    <div class="user-info">
+      <span id="userName">جاري التحميل...</span>
+      <button class="btn btn-danger" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="form-group">
+      <label for="dateFrom">من تاريخ</label>
+      <input type="date" id="dateFrom">
+    </div>
+    <div class="form-group">
+      <label for="dateTo">إلى تاريخ</label>
+      <input type="date" id="dateTo">
+    </div>
+    <button class="btn btn-primary" id="generateBtn">عرض التقارير</button>
+
+    <div class="card">
+      <h2>📉 الأصناف الأكثر سحباً</h2>
+      <table id="mostUsedTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>اسم الصنف</th>
+            <th>المجال</th>
+            <th>إجمالي السحب</th>
+            <th>الوحدة</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>❌ الأصناف الأكثر تلفاً</h2>
+      <table id="mostDamagedTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>اسم الصنف</th>
+            <th>المجال</th>
+            <th>إجمالي التالف</th>
+            <th>الوحدة</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="/pages/reports/reports.js"></script>
+</body>
+</html>

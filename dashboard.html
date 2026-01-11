@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم - نظام إدارة المخزون</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div id="loader" class="loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <h1>🏛️ شركة التميز</h1>
+      <p class="category">بورسلين - رخام - مواد صحية</p>
+      <p class="tagline">خلي التميز عادة</p>
+    </div>
+  </header>
+
+  <nav>
+    <div class="nav-links">
+      <a href="/dashboard.html" class="active">الرئيسية</a>
+      <a href="/inventory.html">الجرد اليومي</a>
+      <a href="/damages.html">التوالف</a>
+      <a href="/reports.html">التقارير</a>
+      <a href="/users.html" id="usersLink" style="display: none;">المستخدمون</a>
+    </div>
+    <div class="user-info">
+      <span id="userName">جاري التحميل...</span>
+      <button class="btn btn-danger" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="lowStockAlert"></div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3 id="totalItems">0</h3>
+        <p>إجمالي الأصناف</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="lowStockItems">0</h3>
+        <p>أصناف قاربت على النفاد</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="todayInventory">0</h3>
+        <p>جرد اليوم</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="todayDamages">0</h3>
+        <p>توالف اليوم</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>المخزون الحالي</h2>
+      <table id="itemsTable">
+        <thead>
+          <tr>
+            <th>اسم الصنف</th>
+            <th>المجال</th>
+            <th>الكمية الحالية</th>
+            <th>الوحدة</th>
+            <th>الحد الأدنى</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="/pages/dashboard/dashboard.js"></script>
+</body>
+</html>
