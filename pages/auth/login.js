@@ -26,7 +26,7 @@ form.addEventListener('submit', async (e) => {
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('*')
-    .eq('id', data.user.id)
+    .eq('user_id', data.user.id)
     .maybeSingle();
 
   if (!profile || !profile.is_active) {
