@@ -4,12 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>تسجيل الدخول - نظام إدارة المخزون</title>
-
   <link rel="stylesheet" href="./styles/main.css">
 </head>
 <body>
 
-<!-- شاشة التحميل -->
 <div id="loader" class="loader" style="display:none;">
   <div class="loader-spinner"></div>
 </div>
@@ -18,25 +16,24 @@
   <div class="auth-card">
     <h2>تسجيل الدخول</h2>
 
-    <!-- ❗ مهم: منع إعادة تحميل الصفحة -->
-    <form id="loginForm" onsubmit="return false;">
+    <form id="loginForm">
       <div class="form-group">
-        <label for="email">البريد الإلكتروني</label>
+        <label>البريد الإلكتروني</label>
         <input type="email" id="email" required />
       </div>
 
       <div class="form-group">
-        <label for="password">كلمة المرور</label>
+        <label>كلمة المرور</label>
         <input type="password" id="password" required />
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width:100%;">
+      <button type="submit" class="btn btn-primary" style="width:100%">
         دخول
       </button>
     </form>
 
     <p class="text-center mt-20">
-      ليس لديك حساب؟ <a href="./signup.html">إنشاء حساب جديد</a>
+      ليس لديك حساب؟ <a href="./signup.html">إنشاء حساب</a>
     </p>
 
     <div id="msg" class="text-center mt-10"></div>
@@ -44,68 +41,6 @@
 </div>
 
 <script type="module" src="./pages/auth/login.js"></script>
-import { supabase } from "./supabase/supabase.js";
-
-const form = document.getElementById("loginForm");
-const msg = document.getElementById("msg");
-const loader = document.getElementById("loader");
-
-function showMessage(text, type="info"){
-  msg.innerText = text;
-  msg.style.color = type === "error" ? "red" : "green";
-}
-
-function showLoading(show){
-  loader.style.display = show ? "flex" : "none";
-}
-
-form.addEventListener("submit", async () => {
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  showLoading(true);
-  showMessage("");
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error || !data.user) {
-    showLoading(false);
-    showMessage("البريد أو كلمة المرور غير صحيحة", "error");
-    return;
-  }
-
-  // جلب البروفايل
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("*")
-    .eq("user_id", data.user.id)
-    .single();
-
-  if (!profile || profile.is_active === false) {
-    await supabase.auth.signOut();
-    showLoading(false);
-    showMessage("حسابك غير نشط، اتصل بالإدارة", "error");
-    return;
-  }
-
-  showMessage("تم تسجيل الدخول بنجاح");
-  setTimeout(() => {
-    window.location.href = "./dashboard.html";
-  }, 800);
-});
-
-// لو المستخدم مسجل مسبقًا
-(async () => {
-  const { data } = await supabase.auth.getUser();
-  if (data.user) {
-    window.location.href = "./dashboard.html";
-  }
-})();
-</script>
 
 </body>
 </html>
