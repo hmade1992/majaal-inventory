@@ -6,6 +6,7 @@ let userProfile = null;
 
 async function init() {
   showLoading(true);
+
   const auth = await checkAuth();
   if (!auth) return;
 
@@ -14,119 +15,84 @@ async function init() {
 
   if (userProfile.role !== 'admin') {
     showMessage('ليس لديك صلاحية للوصول لهذه الصفحة', 'error');
-    setTimeout(() => {
-      window.location.href = '/dashboard.html';
-    }, 2000);
+    setTimeout(() => window.location.href = '/dashboard.html', 2000);
     return;
   }
 
   document.getElementById('userName').textContent = userProfile.full_name;
 
   await loadUsers();
-  setupEventListeners();
+  document.getElementById('logoutBtn').addEventListener('click', signOut);
+
   showLoading(false);
 }
 
-function setupEventListeners() {
-  document.getElementById('logoutBtn').addEventListener('click', signOut);
-}
-
 async function loadUsers() {
-  const { data: profiles } = await supabase
+  const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
     .order('created_at', { ascending: false });
 
-  const { data: { users } } = await supabase.auth.admin.listUsers();
-
-  const usersMap = {};
-  users.forEach(user => {
-    usersMap[user.id] = user;
-  });
+  if (error) {
+    showMessage('خطأ في تحميل المستخدمين');
+    return;
+  }
 
   const tbody = document.querySelector('#usersTable tbody');
   tbody.innerHTML = '';
 
-  profiles?.forEach(profile => {
-    const user = usersMap[profile.id];
+  data.forEach(user => {
+    const status = user.is_active
+      ? `<span style="color:green">نشط</span>`
+      : `<span style="color:red">غير نشط</span>`;
+
     const row = document.createElement('tr');
 
-    const roleText = {
-      'admin': 'مدير',
-      'manager': 'مشرف',
-      'employee': 'موظف'
-    }[profile.role] || profile.role;
-
-    const statusBadge = profile.is_active
-      ? '<span style="color: green;">نشط</span>'
-      : '<span style="color: red;">غير نشط</span>';
-
     row.innerHTML = `
-      <td>${profile.full_name}</td>
-      <td>${user?.email || 'غير معروف'}</td>
+      <td>${user.full_name}</td>
+      <td>${user.email}</td>
       <td>
-        <select class="role-select" data-user-id="${profile.id}">
-          <option value="employee" ${profile.role === 'employee' ? 'selected' : ''}>موظف</option>
-          <option value="manager" ${profile.role === 'manager' ? 'selected' : ''}>مشرف</option>
-          <option value="admin" ${profile.role === 'admin' ? 'selected' : ''}>مدير</option>
+        <select data-id="${user.user_id}" class="role-select">
+          <option value="employee" ${user.role === 'employee' ? 'selected' : ''}>موظف</option>
+          <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>مشرف</option>
+          <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>مدير</option>
         </select>
       </td>
-      <td>${statusBadge}</td>
-      <td>${formatDate(profile.created_at)}</td>
+      <td>${status}</td>
+      <td>${formatDate(user.created_at)}</td>
       <td>
-        ${profile.is_active
-          ? `<button class="btn btn-danger" onclick="toggleUserStatus('${profile.id}', false)">تعطيل</button>`
-          : `<button class="btn btn-primary" onclick="toggleUserStatus('${profile.id}', true)">تفعيل</button>`
-        }
+        <button class="btn ${user.is_active ? 'btn-danger' : 'btn-primary'}"
+          onclick="toggleUser('${user.user_id}', ${!user.is_active})">
+          ${user.is_active ? 'تعطيل' : 'تفعيل'}
+        </button>
       </td>
     `;
 
     tbody.appendChild(row);
   });
 
-  document.querySelectorAll('.role-select').forEach(select => {
-    select.addEventListener('change', async (e) => {
-      const userId = e.target.dataset.userId;
-      const newRole = e.target.value;
-      await updateUserRole(userId, newRole);
+  document.querySelectorAll('.role-select').forEach(sel => {
+    sel.addEventListener('change', async e => {
+      await supabase
+        .from('user_profiles')
+        .update({ role: e.target.value })
+        .eq('user_id', e.target.dataset.id);
+
+      showMessage('تم تحديث الدور');
     });
   });
 }
 
-async function updateUserRole(userId, role) {
+window.toggleUser = async function (userId, active) {
   showLoading(true);
 
-  const { error } = await supabase
+  await supabase
     .from('user_profiles')
-    .update({ role })
-    .eq('id', userId);
+    .update({ is_active: active })
+    .eq('user_id', userId);
 
   showLoading(false);
-
-  if (error) {
-    showMessage('خطأ في تحديث الدور', 'error');
-    return;
-  }
-
-  showMessage('تم تحديث الدور بنجاح');
-}
-
-window.toggleUserStatus = async function(userId, isActive) {
-  showLoading(true);
-
-  const { error } = await supabase
-    .from('user_profiles')
-    .update({ is_active: isActive })
-    .eq('id', userId);
-
-  showLoading(false);
-
-  if (error) {
-    showMessage('خطأ في تحديث حالة المستخدم', 'error');
-    return;
-  }
-
-  showMessage(isActive ? 'تم تفعيل المستخدم بنجاح' : 'تم تعطيل المستخدم بنجاح');
+  showMessage(active ? 'تم التفعيل' : 'تم التعطيل');
   await loadUsers();
 };
 
