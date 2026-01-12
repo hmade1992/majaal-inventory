@@ -6,6 +6,7 @@ let userProfile = null;
 
 async function init() {
   showLoading(true);
+
   const auth = await checkAuth();
   if (!auth) return;
 
@@ -20,23 +21,33 @@ async function init() {
 
   setupDateFilters();
   await generateReports();
-  setupEventListeners();
+  setupEvents();
+
   showLoading(false);
 }
 
+/* ===========================
+   Dates
+=========================== */
 function setupDateFilters() {
   const today = new Date();
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  document.getElementById('dateFrom').value = firstDayOfMonth.toISOString().split('T')[0];
+  document.getElementById('dateFrom').value = firstDay.toISOString().split('T')[0];
   document.getElementById('dateTo').value = today.toISOString().split('T')[0];
 }
 
-function setupEventListeners() {
+/* ===========================
+   Events
+=========================== */
+function setupEvents() {
   document.getElementById('generateBtn').addEventListener('click', generateReports);
   document.getElementById('logoutBtn').addEventListener('click', signOut);
 }
 
+/* ===========================
+   Generate
+=========================== */
 async function generateReports() {
   showLoading(true);
   await loadMostUsedItems();
@@ -44,115 +55,110 @@ async function generateReports() {
   showLoading(false);
 }
 
+/* ===========================
+   Most Used
+=========================== */
 async function loadMostUsedItems() {
   const dateFrom = document.getElementById('dateFrom').value;
   const dateTo = document.getElementById('dateTo').value;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('daily_inventory')
     .select(`
       item_id,
       previous_quantity,
       counted_quantity,
-      items(name, category, unit)
+      inventory_date,
+      items ( name, category, unit )
     `)
     .gte('inventory_date', dateFrom)
     .lte('inventory_date', dateTo);
 
-  const itemUsage = {};
+  if (error || !data) return;
 
-  data?.forEach(record => {
-    const withdrawal = record.previous_quantity - record.counted_quantity;
-    if (withdrawal > 0) {
-      if (!itemUsage[record.item_id]) {
-        itemUsage[record.item_id] = {
-          name: record.items.name,
-          category: record.items.category,
-          unit: record.items.unit,
+  const usage = {};
+
+  data.forEach(r => {
+    const diff = r.previous_quantity - r.counted_quantity;
+    if (diff > 0) {
+      if (!usage[r.item_id]) {
+        usage[r.item_id] = {
+          name: r.items.name,
+          category: r.items.category,
+          unit: r.items.unit,
           total: 0
         };
       }
-      itemUsage[record.item_id].total += withdrawal;
+      usage[r.item_id].total += diff;
     }
   });
 
-  const sortedItems = Object.entries(itemUsage)
-    .map(([id, data]) => ({ id, ...data }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10);
-
-  const tbody = document.querySelector('#mostUsedTable tbody');
-  tbody.innerHTML = '';
-
-  if (sortedItems.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد بيانات</td></tr>';
-    return;
-  }
-
-  sortedItems.forEach((item, index) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${item.name}</td>
-      <td>${item.category}</td>
-      <td>${formatNumber(item.total)}</td>
-      <td>${item.unit}</td>
-    `;
-    tbody.appendChild(row);
-  });
+  renderTable('#mostUsedTable', usage);
 }
 
+/* ===========================
+   Most Damaged
+=========================== */
 async function loadMostDamagedItems() {
   const dateFrom = document.getElementById('dateFrom').value;
   const dateTo = document.getElementById('dateTo').value;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('damages')
     .select(`
       item_id,
       quantity,
-      items(name, category, unit)
+      damage_date,
+      items ( name, category, unit )
     `)
     .gte('damage_date', dateFrom)
     .lte('damage_date', dateTo);
 
-  const itemDamages = {};
+  if (error || !data) return;
 
-  data?.forEach(record => {
-    if (!itemDamages[record.item_id]) {
-      itemDamages[record.item_id] = {
-        name: record.items.name,
-        category: record.items.category,
-        unit: record.items.unit,
+  const damages = {};
+
+  data.forEach(r => {
+    if (!damages[r.item_id]) {
+      damages[r.item_id] = {
+        name: r.items.name,
+        category: r.items.category,
+        unit: r.items.unit,
         total: 0
       };
     }
-    itemDamages[record.item_id].total += parseFloat(record.quantity);
+    damages[r.item_id].total += parseFloat(r.quantity);
   });
 
-  const sortedItems = Object.entries(itemDamages)
-    .map(([id, data]) => ({ id, ...data }))
+  renderTable('#mostDamagedTable', damages);
+}
+
+/* ===========================
+   Render Table
+=========================== */
+function renderTable(tableId, dataObj) {
+  const sorted = Object.values(dataObj)
     .sort((a, b) => b.total - a.total)
     .slice(0, 10);
 
-  const tbody = document.querySelector('#mostDamagedTable tbody');
+  const tbody = document.querySelector(`${tableId} tbody`);
   tbody.innerHTML = '';
 
-  if (sortedItems.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد بيانات</td></tr>';
+  if (sorted.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center">لا توجد بيانات</td></tr>`;
     return;
   }
 
-  sortedItems.forEach((item, index) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${index + 1}</td>
+  sorted.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i + 1}</td>
       <td>${item.name}</td>
       <td>${item.category}</td>
       <td>${formatNumber(item.total)}</td>
       <td>${item.unit}</td>
     `;
-    tbody.appendChild(row);
+    tbody.appendChild(tr);
   });
 }
 
