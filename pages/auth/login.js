@@ -1,13 +1,13 @@
-import { supabase } from '../../config/supabase.js';
-import { showMessage, showLoading } from '../../utils/helpers.js';
+import { supabase } from "../../supabase/supabase.js";
+import { showMessage, showLoading } from "../../utils/helpers.js";
 
-const form = document.getElementById('loginForm');
+const form = document.getElementById("loginForm");
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
   showLoading(true);
 
@@ -18,32 +18,35 @@ form.addEventListener('submit', async (e) => {
 
   showLoading(false);
 
-  if (error) {
-    showMessage('خطأ في البريد الإلكتروني أو كلمة المرور', 'error');
+  if (error || !data.user) {
+    showMessage("خطأ في البريد الإلكتروني أو كلمة المرور", "error");
     return;
   }
 
+  // جلب البروفايل
   const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('user_id', data.user.id)
-    .maybeSingle();
+    .from("user_profiles")
+    .select("*")
+    .eq("user_id", data.user.id)
+    .single();
 
-  if (!profile || !profile.is_active) {
+  if (!profile || profile.is_active === false) {
     await supabase.auth.signOut();
-    showMessage('حسابك غير نشط، يرجى التواصل مع المسؤول', 'error');
+    showMessage("حسابك غير نشط، يرجى التواصل مع المسؤول", "error");
     return;
   }
 
-  showMessage('تم تسجيل الدخول بنجاح');
+  showMessage("تم تسجيل الدخول بنجاح");
+
   setTimeout(() => {
-    window.location.href = '/dashboard.html';
-  }, 1000);
+    window.location.href = "/dashboard.html";
+  }, 800);
 });
 
+// إذا المستخدم داخل بالفعل
 (async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    window.location.href = '/dashboard.html';
+  const { data } = await supabase.auth.getUser();
+  if (data.user) {
+    window.location.href = "/dashboard.html";
   }
 })();
