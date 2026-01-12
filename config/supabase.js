@@ -1,10 +1,12 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// 🔴 عوضهم بالقيم متاعك من Supabase
+// 🔴 حط القيم متاعك من Supabase
 const SUPABASE_URL = "https://tmdfkuujbhbvzrjaixnn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtZGZrdXVqYmhidnpyamFpeG5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMjUwODQsImV4cCI6MjA4MzcwMTA4NH0.7JQJeKpWUNpq8VedgMEng6k_ASwA-31iuNAhADID7Vc";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const BASE_PATH = "/majaal-inventory";
 
 // ==========================
 // Auth helpers
@@ -16,18 +18,23 @@ export async function getCurrentUser() {
 }
 
 export async function getUserProfile(userId) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_profiles")
     .select("*")
     .eq("user_id", userId)
     .single();
+
+  if (error) {
+    console.error("Profile error:", error);
+    return null;
+  }
 
   return data;
 }
 
 export async function signOut() {
   await supabase.auth.signOut();
-  window.location.href = "/login.html";
+  window.location.href = `${BASE_PATH}/login.html`;
 }
 
 export async function checkAuth() {
@@ -35,7 +42,7 @@ export async function checkAuth() {
   const user = data.user;
 
   if (!user) {
-    window.location.href = "/login.html";
+    window.location.href = `${BASE_PATH}/login.html`;
     return null;
   }
 
