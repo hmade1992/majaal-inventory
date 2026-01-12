@@ -1,27 +1,53 @@
 <!doctype html>
 <html lang="ar">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>نظام إدارة المخزون</title>
-    <link rel="stylesheet" href="/majaal-inventory/styles/main.css">
-  </head>
-  <body>
-    <div class="loader" style="display: flex;">
-      <div class="loader-spinner"></div>
-    </div>
+<head>
+  <meta charset="UTF-8" />
+  <title>نظام إدارة المخزون</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <script type="module">
-      import { supabase } from '/majaal-inventory/config/supabase.js';
+  <!-- CSS -->
+  <link rel="stylesheet" href="./styles/main.css">
 
-      (async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          window.location.href = '/majaal-inventory/dashboard.html';
-        } else {
-          window.location.href = '/majaal-inventory/login.html';
+  <meta property="og:image" content="https://bolt.new/static/og_default.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://bolt.new/static/og_default.png">
+</head>
+
+<body>
+
+  <!-- شاشة تحميل -->
+  <div class="loader" id="loader" style="display:flex;">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./config/supabase.js";
+
+    async function checkUser() {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error) {
+          console.error("Supabase error:", error);
+          window.location.href = "./login.html";
+          return;
         }
-      })();
-    </script>
-  </body>
+
+        if (data?.user) {
+          // المستخدم مسجل
+          window.location.href = "./dashboard.html";
+        } else {
+          // غير مسجل
+          window.location.href = "./login.html";
+        }
+      } catch (e) {
+        console.error("Fatal error:", e);
+        window.location.href = "./login.html";
+      }
+    }
+
+    checkUser();
+  </script>
+
+</body>
 </html>
