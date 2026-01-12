@@ -5,8 +5,12 @@ let currentUser = null;
 let userProfile = null;
 let items = [];
 
+/* =========================
+   Init
+========================= */
 async function init() {
   showLoading(true);
+
   const auth = await checkAuth();
   if (!auth) return;
 
@@ -21,15 +25,21 @@ async function init() {
 
   await loadItems();
   await loadDamagesHistory();
-  setupEventListeners();
+  setupEvents();
+
   showLoading(false);
 }
 
+/* =========================
+   Load Items
+========================= */
 async function loadItems() {
-  const { data } = await supabase
-    .from('items')
-    .select('*')
-    .order('name');
+  const { data, error } = await supabase.from('items').select('*').order('name');
+
+  if (error) {
+    showMessage('خطأ في تحميل الأصناف', 'error');
+    return;
+  }
 
   items = data;
 
@@ -37,56 +47,62 @@ async function loadItems() {
   select.innerHTML = '<option value="">اختر الصنف</option>';
 
   items.forEach(item => {
-    const option = document.createElement('option');
-    option.value = item.id;
-    option.textContent = `${item.name} (${formatNumber(item.current_quantity)} ${item.unit})`;
-    option.dataset.quantity = item.current_quantity;
-    select.appendChild(option);
+    const opt = document.createElement('option');
+    opt.value = item.id;
+    opt.textContent = `${item.name} (${formatNumber(item.current_quantity)} ${item.unit})`;
+    opt.dataset.quantity = item.current_quantity;
+    select.appendChild(opt);
   });
 }
 
-function setupEventListeners() {
-  document.getElementById('itemId').addEventListener('change', (e) => {
-    const selectedOption = e.target.options[e.target.selectedIndex];
-    const currentQty = selectedOption.dataset.quantity || '0';
-    document.getElementById('currentQty').value = formatNumber(currentQty);
+/* =========================
+   Events
+========================= */
+function setupEvents() {
+  document.getElementById('itemId').addEventListener('change', e => {
+    const option = e.target.options[e.target.selectedIndex];
+    document.getElementById('currentQty').value = formatNumber(option?.dataset.quantity || 0);
   });
 
   document.getElementById('damageForm').addEventListener('submit', handleSubmit);
-
   document.getElementById('filterDate').addEventListener('change', loadDamagesHistory);
-
   document.getElementById('logoutBtn').addEventListener('click', signOut);
 
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('filterDate').value = today;
+  document.getElementById('filterDate').value = new Date().toISOString().split('T')[0];
 }
 
+/* =========================
+   Submit Damage
+========================= */
 async function handleSubmit(e) {
   e.preventDefault();
 
   const itemId = document.getElementById('itemId').value;
-  const damageQty = parseFloat(document.getElementById('damageQty').value);
+  const qty = parseFloat(document.getElementById('damageQty').value);
   const reason = document.getElementById('reason').value;
 
-  const selectedItem = items.find(item => item.id === itemId);
-  if (!selectedItem) return;
+  if (!itemId || isNaN(qty) || qty <= 0) {
+    showMessage('أدخل كمية صحيحة واختر الصنف', 'error');
+    return;
+  }
 
-  if (damageQty > parseFloat(selectedItem.current_quantity)) {
-    showMessage('كمية التالف أكبر من الكمية المتوفرة', 'error');
+  const item = items.find(i => i.id === itemId);
+  if (!item) return;
+
+  if (qty > item.current_quantity) {
+    showMessage('كمية التلف أكبر من الكمية المتوفرة', 'error');
     return;
   }
 
   showLoading(true);
 
-  const { error } = await supabase
-    .from('damages')
-    .insert([{
-      item_id: itemId,
-      quantity: damageQty,
-      reason: reason || null,
-      recorded_by: currentUser.id
-    }]);
+  const { error } = await supabase.from('damages').insert([{
+    item_id: itemId,
+    quantity: qty,
+    damage_date: new Date().toISOString().split('T')[0],
+    reason: reason || null,
+    recorded_by: currentUser.id
+  }]);
 
   showLoading(false);
 
@@ -98,46 +114,51 @@ async function handleSubmit(e) {
   showMessage('تم تسجيل التلف بنجاح');
   document.getElementById('damageForm').reset();
   document.getElementById('currentQty').value = '';
+
   await loadItems();
   await loadDamagesHistory();
 }
 
+/* =========================
+   Load History
+========================= */
 async function loadDamagesHistory() {
-  const filterDate = document.getElementById('filterDate').value;
+  const date = document.getElementById('filterDate').value;
+
   let query = supabase
     .from('damages')
     .select(`
-      *,
-      items(name, unit),
-      user_profiles(full_name)
+      id,
+      damage_date,
+      quantity,
+      reason,
+      items ( name, unit ),
+      user_profiles ( full_name )
     `)
-    .order('created_at', { ascending: false });
+    .order('damage_date', { ascending: false });
 
-  if (filterDate) {
-    query = query.eq('damage_date', filterDate);
-  }
+  if (date) query = query.eq('damage_date', date);
 
-  const { data } = await query;
+  const { data, error } = await query;
 
   const tbody = document.querySelector('#damagesTable tbody');
   tbody.innerHTML = '';
 
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">لا توجد سجلات</td></tr>';
+  if (error || !data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center">لا توجد بيانات</td></tr>`;
     return;
   }
 
-  data.forEach(record => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${formatDate(record.damage_date)}</td>
-      <td>${record.items.name}</td>
-      <td>${formatNumber(record.quantity)} ${record.items.unit}</td>
-      <td>${record.reason || '-'}</td>
-      <td>${record.user_profiles?.full_name || 'غير معروف'}</td>
+  data.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${formatDate(r.damage_date)}</td>
+      <td>${r.items?.name || '-'}</td>
+      <td>${formatNumber(r.quantity)} ${r.items?.unit || ''}</td>
+      <td>${r.reason || '-'}</td>
+      <td>${r.user_profiles?.full_name || '-'}</td>
     `;
-
-    tbody.appendChild(row);
+    tbody.appendChild(tr);
   });
 }
 
